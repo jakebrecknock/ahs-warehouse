@@ -9,11 +9,12 @@
 <body>
   <h1>Warehouse Tool Checkout Dashboard</h1>
 
-  <form id="checkout-form">
-    <h2>Check Out a Tool</h2>
-    <label for="tool">Tool:</label>
-    <select id="tool" required></select>
+  <h2>Tools</h2>
+  <div id="tool-buttons-container"></div>
 
+  <!-- Hidden form appears when a tool button is clicked -->
+  <form id="checkout-form" style="display: none;">
+    <h2>Check Out Tool</h2>
     <label for="fullName">Full Name:</label>
     <input type="text" id="fullName" placeholder="First Last" required>
 
@@ -28,23 +29,9 @@
       Approved Outside Work Hours?
     </label>
 
-    <button type="submit">Check Out</button>
+    <button type="submit">Confirm Checkout</button>
   </form>
 
-  <table id="checkout-table">
-    <thead>
-      <tr>
-        <th>Tool Name</th>
-        <th>Checked Out By</th>
-        <th>Checkout Time</th>
-        <th>Return Time</th>
-        <th>Outside Work Hours</th>
-        <th>Approved</th>
-      </tr>
-    </thead>
-    <tbody id="checkout-body"></tbody>
-  </table>
-
-  <script type="module" src="app.js"></script>
+  <script type="module" src="checkout.js"></script>
 </body>
 </html>

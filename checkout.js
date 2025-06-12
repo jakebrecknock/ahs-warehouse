@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-import { getDatabase, ref, onValue, set, push, get, child } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
+import { getDatabase, ref, onValue, set, push, get, child, remove } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
 
 // Firebase config
 const firebaseConfig = {
@@ -16,19 +16,19 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Tool inventory
+// Inventory list (note: duplicates for multiples)
 const toolInventory = [
   "White truck",
   "Misc. hand tools",
-  "Bottle jacks and level",
-  "Bottle jacks and level",
-  "Bottle jacks and level",
+  "Bottle jacks and level 1",
+  "Bottle jacks and level 2",
+  "Bottle jacks and level 3",
   "Extension cords and Job site lighting",
   "Commercial Electric general purpose fan",
   "DeWalt FlexVolt battery angle grinder",
-  "30 ft ladder",
-  "30 ft ladder",
-  "30 ft ladder",
+  "30 ft ladder 1",
+  "30 ft ladder 2",
+  "30 ft ladder 3",
   "Ryobi 10 in circular saw",
   "Table saw/stand",
   "GP construction tarps",
@@ -46,26 +46,66 @@ const toolInventory = [
   "Ryobi 18v 4AH battery"
 ];
 
-// Populate tool dropdown
-const toolSelect = document.getElementById("tool");
-toolInventory.forEach(tool => {
-  const option = document.createElement("option");
-  option.value = tool;
-  option.textContent = tool;
-  toolSelect.appendChild(option);
-});
-
-// Handle form submission
+// DOM references
+const toolButtonsContainer = document.getElementById("tool-buttons-container");
 const form = document.getElementById("checkout-form");
+const fullNameInput = document.getElementById("fullName");
+const checkoutTimeInput = document.getElementById("checkoutTime");
+const returnTimeInput = document.getElementById("returnTime");
+const approvedCheckbox = document.getElementById("outsideHours");
 
+let activeTool = null;
+
+// Render tool buttons
+function renderToolButtons(checkouts) {
+  toolButtonsContainer.innerHTML = "";
+  const checkedOutMap = {};
+
+  Object.entries(checkouts).forEach(([id, data]) => {
+    checkedOutMap[data.tool] = { ...data, id };
+  });
+
+  toolInventory.forEach(tool => {
+    const isCheckedOut = checkedOutMap[tool];
+    const button = document.createElement("button");
+    button.textContent = tool;
+    button.disabled = !!isCheckedOut;
+    button.className = isCheckedOut ? "tool-button disabled" : "tool-button";
+
+    if (!isCheckedOut) {
+      button.addEventListener("click", () => {
+        activeTool = tool;
+        form.style.display = "block";
+      });
+    } else {
+      const container = document.createElement("div");
+      container.className = "tool-container";
+      container.appendChild(button);
+
+      const checkInBtn = document.createElement("button");
+      checkInBtn.textContent = "Check In";
+      checkInBtn.className = "checkin-button";
+      checkInBtn.addEventListener("click", () => {
+        remove(ref(db, `checkouts/${isCheckedOut.id}`));
+      });
+
+      container.appendChild(checkInBtn);
+      toolButtonsContainer.appendChild(container);
+      return;
+    }
+
+    toolButtonsContainer.appendChild(button);
+  });
+}
+
+// Form submission logic
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
-  
-  const tool = toolSelect.value;
-  const fullName = document.getElementById("fullName").value.trim();
-  const checkoutTime = new Date(document.getElementById("checkoutTime").value).getTime();
-  const returnTime = new Date(document.getElementById("returnTime").value).getTime();
-  const approved = document.getElementById("outsideHours").checked;
+
+  const fullName = fullNameInput.value.trim();
+  const checkoutTime = new Date(checkoutTimeInput.value).getTime();
+  const returnTime = new Date(returnTimeInput.value).getTime();
+  const approved = approvedCheckbox.checked;
 
   if (!/^\w+\s+\w+$/.test(fullName)) {
     alert("Please enter full name (first and last).");
@@ -73,7 +113,7 @@ form.addEventListener("submit", async (e) => {
   }
 
   await push(ref(db, "checkouts"), {
-    tool,
+    tool: activeTool,
     checkedOutBy: fullName,
     timestamp: checkoutTime,
     returnTime,
@@ -81,25 +121,15 @@ form.addEventListener("submit", async (e) => {
   });
 
   form.reset();
+  form.style.display = "none";
+  activeTool = null;
 });
 
-// Live updates
-const tbody = document.getElementById("checkout-body");
-
+// Live update
 onValue(ref(db, "checkouts"), (snapshot) => {
-  tbody.innerHTML = "";
-  snapshot.forEach((child) => {
-    const data = child.val();
-
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${data.tool}</td>
-      <td>${data.checkedOutBy}</td>
-      <td>${new Date(data.timestamp).toLocaleString()}</td>
-      <td>${new Date(data.returnTime).toLocaleString()}</td>
-      <td>${data.timestamp ? (data.timestamp < 7 || data.timestamp > 17 ? "Yes" : "Manual") : "Manual"}</td>
-      <td>${data.approved ? "✅" : "❌"}</td>
-    `;
-    tbody.appendChild(tr);
+  const data = {};
+  snapshot.forEach(child => {
+    data[child.key] = child.val();
   });
+  renderToolButtons(data);
 });

@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-app.js";
-import { getDatabase, ref, onValue, set, push, get, child, remove } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
+import { getDatabase, ref, onValue, push, remove } from "https://www.gstatic.com/firebasejs/11.9.1/firebase-database.js";
 
 // Firebase config
 const firebaseConfig = {
@@ -16,7 +16,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Inventory list (note: duplicates for multiples)
 const toolInventory = [
   "White truck",
   "Misc. hand tools",
@@ -46,13 +45,11 @@ const toolInventory = [
   "Ryobi 18v 4AH battery"
 ];
 
-// DOM references
 const toolButtonsContainer = document.getElementById("tool-buttons-container");
 const form = document.getElementById("checkout-form");
 const fullNameInput = document.getElementById("fullName");
 const checkoutTimeInput = document.getElementById("checkoutTime");
 const returnTimeInput = document.getElementById("returnTime");
-const approvedCheckbox = document.getElementById("outsideHours");
 
 let activeTool = null;
 
@@ -72,15 +69,25 @@ function renderToolButtons(checkouts) {
     button.disabled = !!isCheckedOut;
     button.className = isCheckedOut ? "tool-button disabled" : "tool-button";
 
+    const wrapper = document.createElement("div");
+    wrapper.className = "tool-container";
+
     if (!isCheckedOut) {
       button.addEventListener("click", () => {
         activeTool = tool;
         form.style.display = "block";
       });
+      wrapper.appendChild(button);
     } else {
-      const container = document.createElement("div");
-      container.className = "tool-container";
-      container.appendChild(button);
+      wrapper.appendChild(button);
+
+      const info = document.createElement("div");
+      info.className = "tool-info";
+      info.innerHTML = `
+        <strong>Checked out by:</strong> ${isCheckedOut.checkedOutBy}<br>
+        <strong>Time out:</strong> ${new Date(isCheckedOut.timestamp).toLocaleString()}<br>
+        <strong>Return by:</strong> ${new Date(isCheckedOut.returnTime).toLocaleString()}
+      `;
 
       const checkInBtn = document.createElement("button");
       checkInBtn.textContent = "Check In";
@@ -89,23 +96,21 @@ function renderToolButtons(checkouts) {
         remove(ref(db, `checkouts/${isCheckedOut.id}`));
       });
 
-      container.appendChild(checkInBtn);
-      toolButtonsContainer.appendChild(container);
-      return;
+      wrapper.appendChild(info);
+      wrapper.appendChild(checkInBtn);
     }
 
-    toolButtonsContainer.appendChild(button);
+    toolButtonsContainer.appendChild(wrapper);
   });
 }
 
-// Form submission logic
+// Form submission
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
   const fullName = fullNameInput.value.trim();
   const checkoutTime = new Date(checkoutTimeInput.value).getTime();
   const returnTime = new Date(returnTimeInput.value).getTime();
-  const approved = approvedCheckbox.checked;
 
   if (!/^\w+\s+\w+$/.test(fullName)) {
     alert("Please enter full name (first and last).");
@@ -116,8 +121,7 @@ form.addEventListener("submit", async (e) => {
     tool: activeTool,
     checkedOutBy: fullName,
     timestamp: checkoutTime,
-    returnTime,
-    approved
+    returnTime
   });
 
   form.reset();
@@ -125,7 +129,7 @@ form.addEventListener("submit", async (e) => {
   activeTool = null;
 });
 
-// Live update
+// Live data update
 onValue(ref(db, "checkouts"), (snapshot) => {
   const data = {};
   snapshot.forEach(child => {

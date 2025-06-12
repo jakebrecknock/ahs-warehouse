@@ -5,14 +5,9 @@ body {
   padding: 20px;
 }
 
-h1 {
+h1, h2 {
   text-align: center;
   color: #a6192e;
-}
-
-h2 {
-  color: #a6192e;
-  text-align: center;
 }
 
 form {
@@ -30,8 +25,7 @@ form label {
   font-weight: bold;
 }
 
-form input,
-form select {
+form input {
   width: 100%;
   padding: 8px;
   margin-top: 5px;
@@ -57,8 +51,18 @@ form button:hover {
   display: flex;
   flex-wrap: wrap;
   justify-content: center;
-  gap: 10px;
+  gap: 15px;
   margin-bottom: 20px;
+}
+
+.tool-container {
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 12px;
+  width: 240px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.1);
+  text-align: center;
 }
 
 .tool-button {
@@ -69,6 +73,7 @@ form button:hover {
   color: white;
   font-weight: bold;
   cursor: pointer;
+  width: 100%;
 }
 
 .tool-button.disabled {
@@ -76,16 +81,17 @@ form button:hover {
   cursor: not-allowed;
 }
 
-.tool-container {
-  display: flex;
-  align-items: center;
-  gap: 5px;
+.tool-info {
+  margin-top: 10px;
+  font-size: 0.9em;
+  color: #333;
 }
 
 .checkin-button {
   background-color: #2e7d32;
   color: white;
-  padding: 8px 10px;
+  padding: 8px 12px;
+  margin-top: 10px;
   border: none;
   border-radius: 4px;
   cursor: pointer;

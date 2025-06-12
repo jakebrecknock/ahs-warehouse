@@ -10,10 +10,53 @@ h1 {
   color: #a6192e;
 }
 
+form {
+  background: #fcebea;
+  padding: 20px;
+  margin-bottom: 30px;
+  border-radius: 8px;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+}
+
+form h2 {
+  margin-top: 0;
+  color: #a6192e;
+}
+
+form label {
+  display: block;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+form input, form select {
+  width: 100%;
+  padding: 8px;
+  margin-top: 5px;
+  margin-bottom: 15px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+form button {
+  background-color: #a6192e;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+form button:hover {
+  background-color: #891524;
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 30px;
   background-color: #fff;
   box-shadow: 0 0 10px rgba(166, 25, 46, 0.2);
 }
@@ -31,17 +74,4 @@ th, td {
 
 tr:nth-child(even) {
   background-color: #fdf2f2;
-}
-
-button {
-  padding: 5px 10px;
-  background-color: #a6192e;
-  color: white;
-  border: none;
-  cursor: pointer;
-  border-radius: 3px;
-}
-
-button:hover {
-  background-color: #891524;
 }

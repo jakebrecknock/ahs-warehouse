@@ -12,20 +12,7 @@
   <h2>Tools</h2>
   <div id="tool-buttons-container"></div>
 
-  <!-- Hidden form appears when a tool button is clicked -->
-  <form id="checkout-form" style="display: none;">
-    <h2>Check Out Tool</h2>
-    <label for="fullName">Full Name:</label>
-    <input type="text" id="fullName" placeholder="First Last" required>
-
-    <label for="checkoutTime">Checkout Time:</label>
-    <input type="datetime-local" id="checkoutTime" required>
-
-    <label for="returnTime">Expected Return Time:</label>
-    <input type="datetime-local" id="returnTime" required>
-
-    <button type="submit">Confirm Checkout</button>
-  </form>
+  <!-- Checkout form is now inserted dynamically by JS -->
 
   <script type="module" src="checkout.js"></script>
 </body>

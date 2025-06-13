@@ -16,44 +16,71 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
+// Tool inventory
 const toolInventory = [
-  "White truck",
-  "Misc. hand tools",
-  "Bottle jacks and level 1",
-  "Bottle jacks and level 2",
-  "Bottle jacks and level 3",
-  "Extension cords and Job site lighting",
-  "Commercial Electric general purpose fan",
-  "DeWalt FlexVolt battery angle grinder",
-  "30 ft ladder 1",
-  "30 ft ladder 2",
-  "30 ft ladder 3",
-  "Ryobi 10 in circular saw",
-  "Table saw/stand",
-  "GP construction tarps",
-  "Ryobi electric 14 in chain saw",
-  "Porter cable finish nailer",
-  "Echo leaf blower",
-  "Porter cable brad nailer",
-  "Bosch SDS drill",
-  "Ryobi trim nailer",
-  "Ryobi hammer drill",
-  "Porter cable pin nailer",
-  "DeWalt corded angle grinder",
-  "Porter cable crown nailer",
-  "Ryobi 40v 4AH battery with charger",
-  "Ryobi 18v 4AH battery"
+  "White truck", "Misc. hand tools", "Bottle jacks and level 1", "Bottle jacks and level 2",
+  "Bottle jacks and level 3", "Extension cords and Job site lighting",
+  "Commercial Electric general purpose fan", "DeWalt FlexVolt battery angle grinder",
+  "30 ft ladder 1", "30 ft ladder 2", "30 ft ladder 3", "Ryobi 10 in circular saw",
+  "Table saw/stand", "GP construction tarps", "Ryobi electric 14 in chain saw",
+  "Porter cable finish nailer", "Echo leaf blower", "Porter cable brad nailer",
+  "Bosch SDS drill", "Ryobi trim nailer", "Ryobi hammer drill", "Porter cable pin nailer",
+  "DeWalt corded angle grinder", "Porter cable crown nailer",
+  "Ryobi 40v 4AH battery with charger", "Ryobi 18v 4AH battery"
 ];
 
 const toolButtonsContainer = document.getElementById("tool-buttons-container");
-const form = document.getElementById("checkout-form");
-const fullNameInput = document.getElementById("fullName");
-const checkoutTimeInput = document.getElementById("checkoutTime");
-const returnTimeInput = document.getElementById("returnTime");
 
 let activeTool = null;
 
-// Render tool buttons
+// Create reusable form element
+const form = document.createElement("form");
+form.id = "checkout-form";
+form.style.display = "none";
+form.innerHTML = `
+  <h2>Check Out Tool</h2>
+  <label for="fullName">Full Name:</label>
+  <input type="text" id="fullName" placeholder="First Last" required>
+
+  <label for="checkoutTime">Checkout Time:</label>
+  <input type="datetime-local" id="checkoutTime" required>
+
+  <label for="returnTime">Expected Return Time:</label>
+  <input type="datetime-local" id="returnTime" required>
+
+  <button type="submit">Confirm Checkout</button>
+`;
+
+const fullNameInput = form.querySelector("#fullName");
+const checkoutTimeInput = form.querySelector("#checkoutTime");
+const returnTimeInput = form.querySelector("#returnTime");
+
+// Form submit handler
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  const fullName = fullNameInput.value.trim();
+  const checkoutTime = new Date(checkoutTimeInput.value).getTime();
+  const returnTime = new Date(returnTimeInput.value).getTime();
+
+  if (!/^\w+\s+\w+$/.test(fullName)) {
+    alert("Please enter full name (first and last).");
+    return;
+  }
+
+  await push(ref(db, "checkouts"), {
+    tool: activeTool,
+    checkedOutBy: fullName,
+    timestamp: checkoutTime,
+    returnTime
+  });
+
+  form.reset();
+  form.style.display = "none";
+  activeTool = null;
+});
+
+// Render buttons + insert form
 function renderToolButtons(checkouts) {
   toolButtonsContainer.innerHTML = "";
   const checkedOutMap = {};
@@ -75,7 +102,10 @@ function renderToolButtons(checkouts) {
     if (!isCheckedOut) {
       button.addEventListener("click", () => {
         activeTool = tool;
+        form.remove(); // detach from previous location
+        form.reset();
         form.style.display = "block";
+        wrapper.appendChild(form); // insert form below this tool
       });
       wrapper.appendChild(button);
     } else {
@@ -104,32 +134,7 @@ function renderToolButtons(checkouts) {
   });
 }
 
-// Form submission
-form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  const fullName = fullNameInput.value.trim();
-  const checkoutTime = new Date(checkoutTimeInput.value).getTime();
-  const returnTime = new Date(returnTimeInput.value).getTime();
-
-  if (!/^\w+\s+\w+$/.test(fullName)) {
-    alert("Please enter full name (first and last).");
-    return;
-  }
-
-  await push(ref(db, "checkouts"), {
-    tool: activeTool,
-    checkedOutBy: fullName,
-    timestamp: checkoutTime,
-    returnTime
-  });
-
-  form.reset();
-  form.style.display = "none";
-  activeTool = null;
-});
-
-// Live data update
+// Sync with DB
 onValue(ref(db, "checkouts"), (snapshot) => {
   const data = {};
   snapshot.forEach(child => {

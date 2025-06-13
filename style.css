@@ -63,6 +63,11 @@ form button:hover {
   width: 240px;
   box-shadow: 0 0 8px rgba(0,0,0,0.1);
   text-align: center;
+  position: relative;
+}
+
+.tool-container form {
+  margin-top: 15px;
 }
 
 .tool-button {
